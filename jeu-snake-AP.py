@@ -36,6 +36,7 @@ parser.add_argument('--fruit-color', default=ROUGE, help="Prend une couleur pour
 parser.add_argument('--snake-color', default=VERT, help="Prend une couleur pour le serpent")
 parser.add_argument('--snake-length', default=TAILLE,help="Prend un entier pour la longueur du serpent")
 parser.add_argument('--tile-size', default= CASE,help="Prend un entier pour la taille des cases")
+parser.add_argument('--gameover-on-exit',help="Un flag",action='store_false')
 args = parser.parse_args()
 
 
@@ -54,6 +55,7 @@ if int(args.height)<12 or int(args.width)<20:
     raise ValueError("Il doit y avoir au minimum 12 lignes et 20 colonnes")
 if int(args.width)<NOURRITURE2[1] or int(args.height)<NOURRITURE2[0]:
     raise ValueError("le deuxième fruit n'est pas sur l'écran")
+
 
 #Création de l'écran
 screen = pygame.display.set_mode( (int(args.width), int(args.height)) )
@@ -90,7 +92,27 @@ while True:
     #Changement du serpent
     tete_x, tete_y = serpent[0]         
     nouvelle_tete = (tete_x + direction[0] * int(args.tile_size), tete_y + direction[1] * int(args.tile_size))
-    serpent.insert(0, nouvelle_tete)   
+    (new_tete_x,new_tete_y)=nouvelle_tete
+    
+
+    #Vérification de la position du serpent
+    if args.gameover_on_exit==False:
+        if new_tete_x<0 or new_tete_x>int(args.width):
+            pygame.quit()
+        elif new_tete_y<0 or new_tete_y>int(args.height):
+            pygame.quit()
+    else:
+        if new_tete_x<0:
+            new_tete_x=int(args.width)+new_tete_x
+        elif new_tete_x>int(args.width):
+            new_tete_x=new_tete_x-int(args.width)-args.tile_size
+        elif new_tete_y<0:
+            new_tete_x=int(args.height)+new_tete_y
+        elif new_tete_y>int(args.height):
+            new_tete_y=new_tete_y-int(args.height)-args.tile_size
+
+    serpent.insert(0, (new_tete_x,new_tete_y))
+       
 
     #Effet de la nourriture 
     if serpent[0]!=NOURRITURE1 and n==1:    
