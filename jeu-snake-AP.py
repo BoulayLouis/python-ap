@@ -1,74 +1,124 @@
 import pygame
 import random as rd
+import argparse
+
+
 
 pygame.init()
 
-screen = pygame.display.set_mode( (400, 300) )
-
 clock = pygame.time.Clock()
 
-noir,vert,rouge=(0,0,0),(0,255,0),(255,0,0)
-hauteur,largeur=300,400
-case=20
-frame=5
-col=[5,6,7]
-ligne=[10,10,10]
-serpent=[]    #On initialise le serpent
-serpent.append((col[0]*case,ligne[0]*case))
-serpent.append((col[1]*case,ligne[1]*case))
-serpent.append((col[2]*case,ligne[2]*case))
-direction=(1,0) #On initialise la direction qu'il va suivre
-nourriture1=(3*case,3*case)     #on crée les deux positions possibles pour la nourriture
-nourriture2=(15*case,10*case)
-n=1         #on indique la nourriture avec laquelle on va commencer
+#Constantes
+NOIR,VERT,ROUGE,BLANC=(0,0,0),(0,255,0),(255,0,0),(255,255,255)
+HAUTEUR,LARGEUR=300,400
+CASE=20
+FRAME=5
+COL=[5,6,7]
+LIGNE=[10,10,10]
+TAILLE=3
+NOURRITURE1=(3*CASE,3*CASE)     
+NOURRITURE2=(15*CASE,10*CASE)
+
+#Variables
+n=1         
 score=0
+direction=(1,0) 
+
+
+# Lignes de commandes
+parser = argparse.ArgumentParser(description='Some description.')
+parser.add_argument('--bg-color-1',default= NOIR ,help="Prend une couleur")
+parser.add_argument('--bg-color-2', default=BLANC ,help="Prend une couleur")
+parser.add_argument('--height', default=HAUTEUR,help="Prend la hauteur de la fenêtre")
+parser.add_argument('--width', default=LARGEUR,help="Prend la largeur de la fenêtre")
+parser.add_argument('--fps', default=FRAME,help="Prend le nombre d'images par secondes")
+parser.add_argument('--fruit-color', default=ROUGE, help="Prend une couleur pour le fruit")
+parser.add_argument('--snake-color', default=VERT, help="Prend une couleur pour le serpent")
+parser.add_argument('--snake-length', default=TAILLE,help="Prend un entier pour la longueur du serpent")
+parser.add_argument('--tile-size', default= CASE,help="Prend un entier pour la taille des cases")
+args = parser.parse_args()
+
+
+#Conditions d'erreurs
+if args.fruit_color==args.bg_color_1 or args.fruit_color==args.bg_color_2:
+    raise ValueError("Le fruit ne peut pas avoir la même couleur que le fond")
+if args.snake_color==args.bg_color_1 or args.snake_color==args.bg_color_2:
+    raise ValueError("Le serpent ne peut pas avoir la même couleur que le fond")
+if int(args.snake_length)<2 :
+    raise ValueError("Le serpent ne peut pas avoir une longueur inférieure à 2")
+if int(args.height)%int(args.tile_size)!=0:
+    raise ValueError("La hauteur du cadre doit être un multiple de la taille des cases")
+if int(args.width)%int(args.tile_size)!=0:
+    raise ValueError("La largeur du cadre doit être un multiple de la taille des cases")
+if int(args.height)<12 or int(args.width)<20:
+    raise ValueError("Il doit y avoir au minimum 12 lignes et 20 colonnes")
+if int(args.width)<NOURRITURE2[1] or int(args.height)<NOURRITURE2[0]:
+    raise ValueError("le deuxième fruit n'est pas sur l'écran")
+
+#Création de l'écran
+screen = pygame.display.set_mode( (int(args.width), int(args.height)) )
+
+
+#On initialise le serpent
+serpent=[]    
+for k in range (int(args.snake_length)):
+    serpent.append((COL[k]*int(args.tile_size),LIGNE[k]*int(args.tile_size)))
 
 
 while True:
     
     
 
-    clock.tick(frame)
+    clock.tick(args.fps)
 
+    # Changement direction serpent
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_q:  # on quitte le programme si la touvche Q est préssée
                 pygame.QUIT()
                 pygame.quit()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP and direction != (0, 1):  #On change la direction si la touche UP est préssée et qu'on ne va pas déjà vers le bas (pour éviter les demi-tours)
+                if event.key == pygame.K_UP and direction != (0, 1):  
                     direction = (0, -1)
-                elif event.key == pygame.K_DOWN and direction != (0, -1):   #De même pour la touche DOWN
+                elif event.key == pygame.K_DOWN and direction != (0, -1):   
                     direction = (0, 1)
-                elif event.key == pygame.K_LEFT and direction != (1, 0):    #De même pour la touche LEFT
+                elif event.key == pygame.K_LEFT and direction != (1, 0):    
                     direction = (-1, 0)
-                elif event.key == pygame.K_RIGHT and direction != (-1, 0):  #De même pour la touche RIGHT
+                elif event.key == pygame.K_RIGHT and direction != (-1, 0):  
                     direction = (1, 0)
-    tete_x, tete_y = serpent[0]         #on crée la nouvelle tête quand le serpent se déplace
-    nouvelle_tete = (tete_x + direction[0] * case, tete_y + direction[1] * case)
-    serpent.insert(0, nouvelle_tete)    
-    if serpent[0]!=nourriture1 and n==1:    #Si la tête du serpent ne se trouve pas sur la nourriture 1 et qu'elle est affichée
-        serpent.pop()                       #Le serpent reste de même longueur
-    elif serpent[0]!=nourriture2 and n==2:  #Si la tête du serpent ne se trouve pas sur la nourriture 2 et qu'elle est affichée
-        serpent.pop()                       #Le serpent reste de même longueur
-    elif serpent[0]==nourriture2 and n==2:  #Si la tête du serpent se trouve sur la nourriture 2 et qu'elle est affichée
-        n=1                                 #Le serpent s'allonge d'une case et on change de nourriture à afficher
-        score+=1                            #On augmente le score de 1
-    elif serpent[0]==nourriture1 and n==1:  #Si la tête du serpent se trouve sur la nourriture 1 et qu'elle est affichée
-        n=2                                 #Le serpent s'allonge d'une case et on change de nourriture à afficher
-        score+=1                            #On augmente le score de 1
-    screen.fill( (255, 255, 255) )          #On affiche un écran blanc
-    for k in range(0,largeur,2*case):       #On va afficher le cadrillage noir
-        for i in range (0,hauteur,2*case):
-            rect = pygame.Rect(k,i, case, case)
-            rect2 = pygame.Rect(k+case,i+case, case, case)
-            pygame.draw.rect(screen, noir, rect)
-            pygame.draw.rect(screen, noir, rect2)
-    for position in serpent:                   #on affiche le serpent
-        pygame.draw.rect(screen, vert, (position[0], position[1], case, case))
-    if n==1:                                    #Si on doit afficher la nourriture 1, on l'affiche
-        pygame.draw.rect(screen, rouge, (nourriture1[0], nourriture1[1], case, case))
-    else:                                       #Sinon on doit afficher la nourriture 2, on l'affiche
-        pygame.draw.rect(screen, rouge, (nourriture2[0], nourriture2[1], case, case))
-    pygame.display.set_caption(f"Snake - Score : {score}")  #On affiche le score
+
+    #Changement du serpent
+    tete_x, tete_y = serpent[0]         
+    nouvelle_tete = (tete_x + direction[0] * int(args.tile_size), tete_y + direction[1] * int(args.tile_size))
+    serpent.insert(0, nouvelle_tete)   
+
+    #Effet de la nourriture 
+    if serpent[0]!=NOURRITURE1 and n==1:    
+        serpent.pop()                       
+    elif serpent[0]!=NOURRITURE2 and n==2:  
+        serpent.pop()                       
+    elif serpent[0]==NOURRITURE2 and n==2:  
+        n=1                                 
+        score+=1                            
+    elif serpent[0]==NOURRITURE1 and n==1:  
+        n=2                                 
+        score+=1           
+
+    #Affichage de l'écran                 
+    screen.fill( args.bg_color_2 )          
+    for k in range(0,int(args.width),2*int(args.tile_size)):       
+        for i in range (0,int(args.height),2*int(args.tile_size)):
+            rect = pygame.Rect(k,i, int(args.tile_size), int(args.tile_size))
+            rect2 = pygame.Rect(k+int(args.tile_size),i+int(args.tile_size), int(args.tile_size), int(args.tile_size))
+            pygame.draw.rect(screen, args.bg_color_1, rect)
+            pygame.draw.rect(screen, args.bg_color_1, rect2)
+    
+    #Affichage du serpent, des fruits et du score
+    for position in serpent:                   
+        pygame.draw.rect(screen, args.snake_color, (position[0], position[1], int(args.tile_size), int(args.tile_size)))
+    if n==1:                                    
+        pygame.draw.rect(screen, args.fruit_color, (NOURRITURE1[0], NOURRITURE1[1], int(args.tile_size), int(args.tile_size)))
+    else:                                       
+        pygame.draw.rect(screen, args.fruit_color, (NOURRITURE2[0], NOURRITURE2[1], int(args.tile_size), int(args.tile_size)))
+    pygame.display.set_caption(f"Snake - Score : {score}")  
     pygame.display.update()
