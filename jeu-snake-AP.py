@@ -1,6 +1,8 @@
 import pygame
 import random as rd
 import argparse
+import logging
+import sys
 
 
 
@@ -37,6 +39,7 @@ parser.add_argument('--snake-color', default=VERT, help="Prend une couleur pour 
 parser.add_argument('--snake-length', default=TAILLE,help="Prend un entier pour la longueur du serpent")
 parser.add_argument('--tile-size', default= CASE,help="Prend un entier pour la taille des cases")
 parser.add_argument('--gameover-on-exit',help="Un flag",action='store_false')
+parser.add_argument('--debug',help="Utile pour le debug")
 args = parser.parse_args()
 
 
@@ -66,7 +69,15 @@ serpent=[]
 for k in range (int(args.snake_length)):
     serpent.append((COL[k]*int(args.tile_size),LIGNE[k]*int(args.tile_size)))
 
+#Set uo logger
+logger = logging.getLogger(__name__)
+handler = logging.StreamHandler(sys.stderr)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+if args.debug:
+    logger.setLevel(logging.DEBUG)
 
+logger.debug("Start main loop.")
 while True:
     
     
@@ -76,7 +87,7 @@ while True:
     # Changement direction serpent
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_q:  # on quitte le programme si la touvche Q est préssée
+            if event.key == pygame.K_q:  # on quitte le programme si la touche Q est préssée
                 pygame.QUIT()
                 pygame.quit()
             elif event.type == pygame.KEYDOWN:
@@ -95,7 +106,7 @@ while True:
     (new_tete_x,new_tete_y)=nouvelle_tete
     
 
-    #Vérification de la position du serpent
+    #Vérification de la position du serpent dans le cadre
     if args.gameover_on_exit==False:
         if new_tete_x<0 or new_tete_x>int(args.width):
             pygame.quit()
@@ -121,10 +132,12 @@ while True:
         serpent.pop()                       
     elif serpent[0]==NOURRITURE2 and n==2:  
         n=1                                 
-        score+=1                            
+        score+=1  
+        logger.debug("Snake has eaten a fruit.")                          
     elif serpent[0]==NOURRITURE1 and n==1:  
         n=2                                 
-        score+=1           
+        score+=1    
+        logger.debug("Snake has eaten a fruit.")       
 
     #Affichage de l'écran                 
     screen.fill( args.bg_color_2 )          
@@ -144,3 +157,7 @@ while True:
         pygame.draw.rect(screen, args.fruit_color, (NOURRITURE2[0], NOURRITURE2[1], int(args.tile_size), int(args.tile_size)))
     pygame.display.set_caption(f"Snake - Score : {score}")  
     pygame.display.update()
+
+logger.info("Game over.")
+pygame.quit()
+quit(0)
