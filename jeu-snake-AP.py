@@ -67,7 +67,7 @@ screen = pygame.display.set_mode( (int(args.width), int(args.height)) )
 #On initialise le serpent
 serpent=[]    
 for k in range (int(args.snake_length)):
-    serpent.append((COL[k]*int(args.tile_size),LIGNE[k]*int(args.tile_size)))
+    serpent.append(((COL[k]+k)*int(args.tile_size),LIGNE[k]*int(args.tile_size)))
 
 #Set uo logger
 logger = logging.getLogger(__name__)
@@ -88,8 +88,8 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_q:  # on quitte le programme si la touche Q est préssée
-                pygame.QUIT()
                 pygame.quit()
+                sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP and direction != (0, 1):  
                     direction = (0, -1)
@@ -121,6 +121,7 @@ while True:
             new_tete_x=int(args.height)+new_tete_y
         elif new_tete_y>int(args.height):
             new_tete_y=new_tete_y-int(args.height)-args.tile_size
+    
 
     serpent.insert(0, (new_tete_x,new_tete_y))
        
@@ -137,7 +138,13 @@ while True:
     elif serpent[0]==NOURRITURE1 and n==1:  
         n=2                                 
         score+=1    
-        logger.debug("Snake has eaten a fruit.")       
+        logger.debug("Snake has eaten a fruit.")
+
+    #Vérification de cas de collision avec lui même
+    if serpent[0] in serpent[1:] :
+        logger.info ("Game over")
+        pygame.quit()
+        sys.exit()       
 
     #Affichage de l'écran                 
     screen.fill( args.bg_color_2 )          
@@ -158,6 +165,8 @@ while True:
     pygame.display.set_caption(f"Snake - Score : {score}")  
     pygame.display.update()
 
+
 logger.info("Game over.")
 pygame.quit()
+sys.exit()
 quit(0)
